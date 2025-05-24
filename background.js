@@ -16,7 +16,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             chrome.storage.sync.get(['citationStyle', 'customFormat', 'removeUrlParameters'], (settings) => {
                 const style = settings.citationStyle || 'SIST';
-                // カスタムスタイルのデフォルトフォーマットをユーザーの期待する形式に近いものに変更
                 const customFormat = settings.customFormat || '“{title}”．{url}，(参照 {accessDate})．';
                 const removeParams = settings.removeUrlParameters !== undefined ? settings.removeUrlParameters : true;
 
@@ -26,35 +25,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 let citationText = "";
                 if (style === 'SIST') {
-                    // Based on user examples: SIST style components (author, siteName, updateDate)
-                    // are only included if manually provided via the popup.
-                    // Auto-extracted siteName (the variable `siteName`) is NOT used here for the SIST string
-                    // if request.manualSiteName is empty. It is used for the custom style though.
-
                     let sistParts = [];
-                    // URL and Access Date are always included.
-                    // url variable is (tab.url || "{入手先URL}")
-                    // formattedAccessDate is "YYYY-MM-DD"
                     sistParts.push(url + "，(参照 " + formattedAccessDate + ")．");
+                    citationText = sistParts.join("").replace(/．．+/g, '．');
+                } else {
+                    citationText = customFormat
+                        .replace(/{title}/g, title)
+                        .replace(/{url}/g, url)
+                        .replace(/{accessDate}/g, formattedAccessDate);
+                }
 
-                    citationText = sistParts.join("");
-
-                    // Clean up consecutive periods that might occur if parts are joined,
-                    // e.g., Author．“Title”．．URL... (if SiteName and UpdateDate are empty)
-                    // becomes Author．“Title”．URL...
-                    citationText = citationText.replace(/．．+/g, '．');
-
-                    // The previous, more complex cleanup and special handling for SIST are removed,
-                    // as this simpler construction method directly matches the user's examples.
-
-                } else { // Custom Style
-                    citationText = customFormat;
-                    citationText = citationText.replace(/{title}/g, title);
-                    citationText = citationText.replace(/{url}/g, url);
-                    citationText = citationText.replace(/{accessDate}/g, formattedAccessDate);
-                } // if/else for style selection ends here
-
-                // Action handling (generatePreview or copyInfo) moved INSIDE this callback
                 if (request.action === "generatePreview") {
                     sendResponse({citation: citationText});
                 } else if (request.action === "copyInfo") {
@@ -63,20 +43,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         func: copyToClipboard,
                         args: [citationText]
                     }, (injectionResults) => {
-                        if (chrome.runtime.lastError || !injectionResults || !injectionResults[0] || !injectionResults[0].result) {
-                            console.error("スクリプトの実行またはコピーに失敗しました。", chrome.runtime.lastError);
-                            sendResponse({success: false, message: chrome.runtime.lastError ? chrome.runtime.lastError.message : "コピーに失敗しました。"});
+                        const error = chrome.runtime.lastError;
+                        if (error || !injectionResults || !injectionResults[0]?.result) {
+                            console.error("コピーに失敗しました。", error);
+                            sendResponse({success: false, message: error ? error.message : "コピーに失敗しました。"});
                         } else {
                             sendResponse({success: true});
                         }
                     });
                 }
-            }); // Correctly closes chrome.storage.sync.get callback
-            return true; // Indicates that the response is sent asynchronously for tabs.query
-        }); // Closes chrome.tabs.query callback
-        return true; // Indicates that the response is sent asynchronously for onMessage
-    } // Closes if (request.action === "copyInfo" || request.action === "generatePreview")
-}); // Closes chrome.runtime.onMessage.addListener
+            });
+            return true;
+        });
+        return true;
+    }
+});
 
 function copyToClipboard(text) {
     const ta = document.createElement('textarea');
