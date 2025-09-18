@@ -14,25 +14,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const day = accessDate.getDate().toString().padStart(2, '0');
             const formattedAccessDate = `${year}-${month}-${day}`;
 
-            chrome.storage.sync.get(['citationStyle', 'customFormat', 'removeUrlParameters'], (settings) => {
+            chrome.storage.sync.get(['citationStyle', 'customFormat', 'removeUrlParameters', 'copyFormat'], (settings) => {
                 const style = settings.citationStyle || 'SIST';
-                const customFormat = settings.customFormat || '“{title}”．{url}，(参照 {accessDate})．';
+                const customFormat = settings.customFormat || '"{title}"．{url}，(参照 {accessDate})．';
                 const removeParams = settings.removeUrlParameters !== undefined ? settings.removeUrlParameters : true;
+                const copyFormat = settings.copyFormat || 'citation';
 
                 if (removeParams && url.includes('?')) {
                     url = url.split('?')[0];
                 }
 
                 let citationText = "";
-                if (style === 'SIST') {
-                    let sistParts = [];
-                    sistParts.push(url + "，(参照 " + formattedAccessDate + ")．");
-                    citationText = sistParts.join("").replace(/．．+/g, '．');
-                } else {
-                    citationText = customFormat
-                        .replace(/{title}/g, title)
-                        .replace(/{url}/g, url)
-                        .replace(/{accessDate}/g, formattedAccessDate);
+                
+                // 新しいコピー形式に対応
+                switch(copyFormat) {
+                    case 'html':
+                        citationText = `<a href="${url}">${title}</a>`;
+                        break;
+                    case 'markdown':
+                        citationText = `[${title}](${url})`;
+                        break;
+                    case 'citation':
+                    default:
+                        // 標準的な引用形式
+                        citationText = `"${title}" ${url} (参照 ${formattedAccessDate})`;
+                        break;
                 }
 
                 if (request.action === "generatePreview") {
