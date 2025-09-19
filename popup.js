@@ -2,32 +2,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyButton = document.getElementById('copyButton');
     const waybackButton = document.getElementById('waybackButton');
     const optionsButton = document.getElementById('optionsButton');
-    const previewArea = document.getElementById('previewArea'); // プレビュー表示用の要素
+    const previewArea = document.getElementById('previewArea');
 
-    // Function to get citation data from the active tab
+    // Function to get citation data using background script
     async function getCitationData() {
         return new Promise((resolve, reject) => {
-            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.runtime.sendMessage({action: "generatePreview"}, (response) => {
                 if (chrome.runtime.lastError) {
-                    return reject(new Error(chrome.runtime.lastError.message));
-                }
-                if (tabs.length > 0 && tabs[0].url) {
-                    const tab = tabs[0];
-                    const title = tab.title || "タイトルなし";
-                    const url = tab.url;
-
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const formattedDate = `${year}-${month}-${day}`;
-
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else if (response && response.citation) {
                     resolve({
-                        citationText: `"${title}" ${url} (参照 ${formattedDate})`,
-                        url: url
+                        citationText: response.citation
                     });
                 } else {
-                    reject(new Error('アクティブなタブが見つからないか、URLがありません。'));
+                    reject(new Error('プレビューの生成に失敗しました。'));
                 }
             });
         });
@@ -45,25 +33,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to update format info display
+    function updateFormatInfo() {
+        chrome.storage.sync.get(['copyFormat'], (settings) => {
+            const copyFormat = settings.copyFormat || 'citation';
+            const formatInfoElement = document.getElementById('currentFormat');
+            if (formatInfoElement) {
+                switch(copyFormat) {
+                    case 'html':
+                        formatInfoElement.textContent = 'HTML形式';
+                        break;
+                    case 'markdown':
+                        formatInfoElement.textContent = 'Markdown形式';
+                        break;
+                    case 'citation':
+                    default:
+                        formatInfoElement.textContent = '引用形式';
+                        break;
+                }
+            }
+        });
+    }
+
     // Initial preview load
     updatePreview();
+    updateFormatInfo();
+
+    // Listen for storage changes to update preview when settings change
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'sync' && changes.copyFormat) {
+            updatePreview();
+            updateFormatInfo();
+        }
+    });
 
     // Copy button event listener
     if (copyButton) {
-        copyButton.addEventListener('click', async () => {
-            try {
-                const data = await getCitationData();
-                await navigator.clipboard.writeText(data.citationText);
-
-                const originalText = copyButton.textContent;
-                copyButton.textContent = 'コピーしました！';
-                setTimeout(() => {
-                    copyButton.textContent = originalText;
-                }, 2000);
-            } catch (error) {
-                console.error('クリップボードへのコピーに失敗しました:', error);
-                alert(`コピーに失敗しました: ${error.message}`);
-            }
+        copyButton.addEventListener('click', () => {
+            chrome.runtime.sendMessage({action: "copyInfo"}, (response) => {
+                if (response && response.success) {
+                    const originalText = copyButton.textContent;
+                    copyButton.textContent = 'コピーしました！';
+                    setTimeout(() => {
+                        copyButton.textContent = originalText;
+                    }, 2000);
+                } else {
+                    alert(`コピーに失敗しました: ${response?.message || 'Unknown error'}`);
+                }
+            });
         });
     }
 

@@ -7,19 +7,124 @@
         body {
             font-family: sans-serif;
             margin: 20px;
-            min-width: 300px;
+            min-width: 400px;
+            max-width: 600px;
         }
         .container {
+            text-align: left;
+        }
+        .footer {
             text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .settings-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .settings-section h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .format-option {
+            margin-bottom: 10px;
+        }
+        .format-option input[type="radio"] {
+            margin-right: 8px;
+        }
+        .format-option label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .format-description {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+        .save-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .save-button:hover {
+            background-color: #0056b3;
+        }
+        .status-message {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 3px;
+            display: none;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .preview-area {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>出典くん</h1>
-        <p>&copy; Copyright (c) 2025 うすいえんさん</p>
-        <p>この拡張機能はオープンソースであり、MITライセンス の下で配布されています。</p>
-        <p><a href="https://github.com/Usuiensan/shukken-kun" target="_blank">githubリポジトリ</a></p>
+        <h1>出典くん - 設定</h1>
+        
+        <div class="settings-section">
+            <h2>コピー形式</h2>
+            <div class="format-option">
+                <label>
+                    <input type="radio" name="copyFormat" value="citation" checked>
+                    引用形式（デフォルト）
+                </label>
+                <div class="format-description">例: "ページタイトル" https://example.com (参照 2025-01-01)</div>
+            </div>
+            <div class="format-option">
+                <label>
+                    <input type="radio" name="copyFormat" value="html">
+                    HTML形式
+                </label>
+                <div class="format-description">例: &lt;a href="https://example.com"&gt;ページタイトル&lt;/a&gt;</div>
+            </div>
+            <div class="format-option">
+                <label>
+                    <input type="radio" name="copyFormat" value="markdown">
+                    Markdown形式
+                </label>
+                <div class="format-description">例: [ページタイトル](https://example.com)</div>
+            </div>
+            
+            <div class="preview-area" id="formatPreview">
+                プレビューがここに表示されます
+            </div>
+        </div>
+
+        <button class="save-button" id="saveButton">設定を保存</button>
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="footer">
+            <p>&copy; Copyright (c) 2025 うすいえんさん</p>
+            <p>この拡張機能はオープンソースであり、MITライセンス の下で配布されています。</p>
+            <p><a href="https://github.com/Usuiensan/shukken-kun" target="_blank">githubリポジトリ</a></p>
+        </div>
     </div>
+
+    <script src="options.js"></script>
 </body>
 </html>
