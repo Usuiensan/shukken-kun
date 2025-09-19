@@ -1,7 +1,7 @@
 # 出典くん
 
 ページのタイトル、URL、アクセス日を簡単にコピーするChrome拡張機能です。
-
+[Chromeウェブストアから入手](https://chromewebstore.google.com/detail/%E5%87%BA%E5%85%B8%E3%81%8F%E3%82%93/kjlnbjeohfbpcjhjejbefejogkfdnklg)
 ## 機能
 
 *   閲覧中のページのタイトル、URL、アクセス日時をクリップボードにコピーします。
