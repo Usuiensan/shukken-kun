@@ -23,7 +23,7 @@
 
 *   `manifest.json`: 拡張機能の設定ファイル
 *   `popup.html` / `popup.js`: ポップアップウィンドウのHTMLとJavaScript
-*   `options.html`: オプションページのHTML (JavaScriptはpopup.jsに含まれているか、別途options.jsがあるかもしれません)
+*   `options.html`: オプションページのHTML
 *   `background.js`: バックグラウンドで動作するスクリプト
 *   `images/`: アイコン画像
     *   `icon16.png`
