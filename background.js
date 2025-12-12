@@ -21,7 +21,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const copyFormat = settings.copyFormat || 'citation';
 
                 if (removeParams && url.includes('?')) {
-                    url = url.split('?')[0];
+                    try {
+                        const parsed = new URL(url);
+                        const hostname = parsed.hostname.replace(/^www\./, '').toLowerCase();
+                        // YouTube 系は重要なパラメータ（例: v, list）を保持する
+                        if (hostname === 'youtu.be' || hostname.includes('youtube.com')) {
+                            const base = `${parsed.protocol}//${parsed.hostname}${parsed.pathname}`;
+                            const keep = new URLSearchParams();
+                            if (parsed.searchParams.has('v')) {
+                                keep.set('v', parsed.searchParams.get('v'));
+                            }
+                            if (parsed.searchParams.has('list')) {
+                                keep.set('list', parsed.searchParams.get('list'));
+                            }
+                            const qs = keep.toString();
+                            url = qs ? `${base}?${qs}` : base;
+                        } else {
+                            url = url.split('?')[0];
+                        }
+                    } catch (e) {
+                        // URL 解析に失敗したら従来の動作にフォールバック
+                        url = url.split('?')[0];
+                    }
                 }
 
                 let citationText = "";
