@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "出典くん",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ページのタイトル、URL、アクセス日を簡単にコピーします。",
   "permissions": [
     "activeTab",
